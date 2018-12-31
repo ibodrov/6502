@@ -13,19 +13,19 @@
                     .code
 
 ;; Format the value of the accu as a binary string
-;; The string is written into (r0)..(r0)+8 (9 bytes)
-fmt_bin_string:     sta tmp0
+;; The string is written into (R0)..(R0)+8 (9 bytes)
+fmt_bin_string:     sta TMP0
                     phay
                     ldy #8
                     lda #0
-                    sta (r0),y
+                    sta (R0),y
                     dey
-@next_bit:          lsr tmp0
+@next_bit:          lsr TMP0
                     bcs @bit_is_1
 @bit_is_0:          lda #'0'
                     jmp @store_char
 @bit_is_1:          lda #'1'
-@store_char:        sta (r0),y
+@store_char:        sta (R0),y
                     dey
                     bpl @next_bit
                     play
@@ -45,25 +45,25 @@ fmt_hex_char:       cmp #10
                     rts
 
 ;; Format the value of the accu as a hex string
-;; The string is written into (r0)..(r0)+2 (3 bytes)
-fmt_hex_string:     sta tmp0
+;; The string is written into (R0)..(R0)+2 (3 bytes)
+fmt_hex_string:     sta TMP0
                     phay
                     ldy #0
-                    lda tmp0
+                    lda TMP0
                     lsr
                     lsr
                     lsr
                     lsr
                     jsr fmt_hex_char
-                    sta (r0),y
+                    sta (R0),y
                     iny
-                    lda tmp0
+                    lda TMP0
                     and #$0f
                     jsr fmt_hex_char
-                    sta (r0),y
+                    sta (R0),y
                     iny
                     lda #0
-                    sta (r0),y
+                    sta (R0),y
                     play
                     rts
 
@@ -93,56 +93,56 @@ scan_hex_char:      cmp #'0'
 @invalid:           lda #0
                     rts
 
-;; Convert two hex characters starting at (r0) into an integer value
+;; Convert two hex characters starting at (R0) into an integer value
 ;; The integer value is returned in the accu
 scan_hex:           tya
                     pha
                     ldy #0
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
                     asl
                     asl
                     asl
                     asl
-                    sta tmp0
+                    sta TMP0
                     iny
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
-                    ora tmp0
-                    sta tmp0
+                    ora TMP0
+                    sta TMP0
                     pla
                     tay
-                    lda tmp0
+                    lda TMP0
                     rts
 
-;; Convert four hex characters starting at (r0) into an integer value
-;; The integer value is returned in res..res+1
+;; Convert four hex characters starting at (R0) into an integer value
+;; The integer value is returned in RES..RES+1
 scan_hex16:         phay
                     ldy #0
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
                     asl
                     asl
                     asl
                     asl
-                    sta res + 1
+                    sta RES + 1
                     iny
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
-                    ora res + 1
-                    sta res + 1
+                    ora RES + 1
+                    sta RES + 1
                     iny
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
                     asl
                     asl
                     asl
                     asl
-                    sta res
+                    sta RES
                     iny
-                    lda (r0),y
+                    lda (R0),y
                     jsr scan_hex_char
-                    ora res
-                    sta res
+                    ora RES
+                    sta RES
                     play
                     rts

@@ -9,18 +9,13 @@
                     .export acia_init
                     .export acia_getc
                     .export acia_gets
-                    .export acia_gets_buffer
                     .export acia_putc
                     .export acia_puts
                     .export acia_put_newline
 
-                    .bss
-
-acia_gets_buffer:   .res ACIA_BUFFER_LENGTH + 1, 0
-
                     .code
 
-;; Initialize the ACIA
+; Initialize the ACIA
 acia_init:          pha
                     lda #(ACIA_PARITY_DISABLE | ACIA_ECHO_DISABLE | ACIA_TX_INT_DISABLE_RTS_LOW | ACIA_RX_INT_DISABLE | ACIA_DTR_LOW)
                     sta ACIA_COMMAND
@@ -29,53 +24,55 @@ acia_init:          pha
                     pla
                     rts
 
-;; Send the character in A
+; Send the character in A
 acia_putc:          pha
-wait_txd_empty:     lda ACIA_STATUS
+@wait_txd_empty:    lda ACIA_STATUS
                     and #ACIA_STATUS_TX_EMPTY
-                    beq wait_txd_empty
+                    beq @wait_txd_empty
                     pla
                     sta ACIA_DATA
                     rts
 
-;; Send the zero terminated string pointed to by R0
+; Send the zero terminated string pointed to by R0
 acia_puts:          phay
-                    ldy #$ff
-next_char:          iny
-                    lda (R0),y
+                    ldy #0
+@next_char:         lda (R0),y
+                    beq @eos
                     jsr acia_putc
-                    bne next_char
-                    play
+                    iny
+                    bne @next_char
+@eos:               play
                     rts
 
-;; Wait until a character was reveiced and return it in A
+; Wait until a character was reveiced and return it in A
 acia_getc:
-wait_rxd_full:      lda ACIA_STATUS
+@wait_rxd_full:     lda ACIA_STATUS
                     and #ACIA_STATUS_RX_FULL
-                    beq wait_rxd_full
+                    beq @wait_rxd_full
                     lda ACIA_DATA
                     rts
 
-;; Wait until a \n terminated string was received and store it at (R0)
-;; The accu contains the size of the buffer
-;; The \n is removed and the string is zero terminated
-;; After receiving buffer size - 1 characters, any following characters are discarded
+; Wait until a \n terminated string was received and store it at (R0)
+; The accu contains the maximum number of characters to read
+; The \n is removed and the string is zero terminated
+; After receiving the maximum number of characters, any following characters are discarded
+; The buffer at (R0) must be of size maximum number of characters plus 1
 acia_gets:          sta TMP0
                     phay
                     ldy #0
-gets_next_char:     jsr acia_getc
+@next_char:         jsr acia_getc
                     cmp #$0a
-                    beq gets_eos
-                    cpy TMP0
-                    beq gets_next_char
+                    beq @eos
+@check_max_chars:   cpy TMP0
+                    beq @next_char
                     sta (R0),y
                     iny
-                    jmp gets_next_char
-gets_eos:           lda #0
+                    bne @next_char
+@eos:               lda #0
                     sta (R0),y
                     play
                     rts
 
-;; Send a newline character
+; Send a newline character
 acia_put_newline:   lda #$0a
                     jmp acia_putc

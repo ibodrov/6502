@@ -1,4 +1,4 @@
-ASM_SOURCES = dp.s string.s acia.s lcd.s rom.s
+ASM_SOURCES = string.s acia.s lcd.s rom.s
 
 %.o: %.s
 	ca65 -o $@ -l $(@:.o=.lst) $<
