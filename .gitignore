@@ -1,6 +1,8 @@
 *.o
 *.lst
 rom.bin
+*.s
 *.s#*
 *.b#*
 *.epf
+.vscode
