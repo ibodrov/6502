@@ -15,3 +15,6 @@ rom: $(ASM_SOURCES:.s65=.o) $(C_SOURCES:.c=.o)
 
 clean:
 	rm -f *.o *.lst *.s *.map rom.bin
+
+flash: clean all
+	minipro -w rom.bin -p "AT28C64B"
